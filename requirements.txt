@@ -1,0 +1,2 @@
+# Only needed for browser checks, screenshots and video capture.
+playwright==1.62.0

@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>信号，找到彼此</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: #090e10;
+      color: #e7f0eb;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 50% 15%, #172120 0%, #090e10 68%);
+    }
+
+    .preview { padding: 34px 24px 28px; }
+
+    [data-video-stage] {
+      width: min(1280px, calc(100vw - 48px), calc((100vh - 158px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid rgba(224, 244, 232, .12);
+      border-radius: 14px;
+      background: #0b1113;
+      box-shadow: 0 28px 90px rgba(0, 0, 0, .38);
+    }
+
+    canvas { display: block; width: 100%; height: 100%; }
+
+    [data-video-controls] {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      width: min(1280px, calc(100vw - 48px));
+      margin: 15px auto 0;
+      color: #b5c2bd;
+      font: 12px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    button {
+      min-width: 76px;
+      padding: 9px 13px;
+      border: 1px solid rgba(224, 244, 232, .19);
+      border-radius: 7px;
+      background: #111a1c;
+      color: #e7f0eb;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: #68d9bb; color: #8debd0; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #68d9bb; outline-offset: 3px; }
+
+    output { min-width: 102px; text-align: center; font-variant-numeric: tabular-nums; }
+
+    input[type="range"] {
+      flex: 1;
+      min-width: 70px;
+      accent-color: #68d9bb;
+      cursor: pointer;
+    }
+
+    .hint { color: #71817b; white-space: nowrap; }
+
+    @media (max-width: 660px) {
+      .preview { padding: 20px 12px; }
+      [data-video-stage] { width: calc(100vw - 24px); }
+      [data-video-controls] { width: calc(100vw - 24px); gap: 7px; flex-wrap: wrap; }
+      .hint { display: none; }
+      output { min-width: 92px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <section data-video-stage data-width="1280" data-height="720" aria-label="数据整理动画">
+      <canvas width="1280" height="720" role="img" aria-label="散落的数据卡片逐渐聚合为采集、理解、响应三组，并连成结构图"></canvas>
+    </section>
+    <div data-video-controls aria-label="动画控制">
+      <button type="button" data-play aria-label="播放动画">播放</button>
+      <button type="button" data-restart aria-label="从头播放">重播</button>
+      <output data-readout for="timeline">00:00.0 / 00:12.0</output>
+      <input id="timeline" type="range" min="0" max="12000" step="1" value="0" aria-label="动画时间">
+      <span class="hint">拖动时间轴可逐帧定位</span>
+    </div>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+
+      const WIDTH = 1280;
+      const HEIGHT = 720;
+      const DURATION = 12;
+      const FPS = 30;
+      const COLORS = ["#67dfbd", "#f3c76b", "#a99cff"];
+      const INK = "#e7f0eb";
+      const MUTED = "#879792";
+      const canvas = document.querySelector("canvas");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const playButton = document.querySelector("[data-play]");
+      const restartButton = document.querySelector("[data-restart]");
+      const slider = document.querySelector("#timeline");
+      const readout = document.querySelector("[data-readout]");
+      const groups = [
+        { title: "采集", note: "INPUT LAYER", color: COLORS[0] },
+        { title: "理解", note: "RELATION LAYER", color: COLORS[1] },
+        { title: "响应", note: "OUTPUT LAYER", color: COLORS[2] },
+      ];
+      const items = [
+        { label: "意图", kind: "REQUEST", group: 0 },
+        { label: "用户", kind: "SIGNAL", group: 0 },
+        { label: "上下文", kind: "CONTEXT", group: 0 },
+        { label: "引用", kind: "SOURCE", group: 0 },
+        { label: "语义", kind: "EMBEDDING", group: 1 },
+        { label: "检索", kind: "RETRIEVAL", group: 1 },
+        { label: "策略", kind: "POLICY", group: 1 },
+        { label: "风险", kind: "GUARDRAIL", group: 1 },
+        { label: "延迟", kind: "LATENCY", group: 2 },
+        { label: "缓存", kind: "CACHE", group: 2 },
+        { label: "生成", kind: "GENERATION", group: 2 },
+        { label: "反馈", kind: "FEEDBACK", group: 2 },
+      ];
+      const GROUP_X = [76, 476, 876];
+      const CARD_X = [90, 490, 890];
+      const CARD_Y = [311, 365, 419, 473];
+      const CARD_WIDTH = 296;
+      const CARD_HEIGHT = 44;
+      const sources = items.map((_, index) => {
+        const col = index % 4;
+        const row = Math.floor(index / 4);
+        const jx = Math.sin(index * 8.17 + 1.4) * 17;
+        const jy = Math.cos(index * 4.31 + 0.8) * 12;
+        return { x: 88 + col * 300 + jx, y: 272 + row * 100 + jy };
+      });
+
+      let currentTime = 0;
+      let isPlaying = false;
+      let frameId = 0;
+      let playOrigin = 0;
+
+      const clamp = (value, low = 0, high = 1) => Math.max(low, Math.min(high, value));
+      const lerp = (a, b, amount) => a + (b - a) * amount;
+      const smooth = (value) => {
+        const x = clamp(value);
+        return x * x * (3 - 2 * x);
+      };
+      const easeOut = (value) => {
+        const x = clamp(value);
+        return 1 - Math.pow(1 - x, 3);
+      };
+      const roundRect = (x, y, width, height, radius) => {
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, radius);
+      };
+      const alpha = (color, opacity) => {
+        const value = color.slice(1);
+        const number = Number.parseInt(value, 16);
+        return `rgba(${number >> 16}, ${(number >> 8) & 255}, ${number & 255}, ${clamp(opacity)})`;
+      };
+      const formatTime = (seconds) => {
+        const whole = Math.floor(seconds);
+        return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}.${Math.floor((seconds - whole) * 10)}`;
+      };
+
+      function updateControls() {
+        const ended = currentTime >= DURATION;
+        playButton.textContent = isPlaying ? "暂停" : ended ? "再看一次" : "播放";
+        playButton.setAttribute("aria-label", isPlaying ? "暂停动画" : ended ? "从头播放" : "播放动画");
+        slider.value = String(Math.round(currentTime * 1000));
+        readout.textContent = `${formatTime(currentTime)} / ${formatTime(DURATION)}`;
+      }
+
+      function drawBackground(t) {
+        const wash = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+        wash.addColorStop(0, "#0d1718");
+        wash.addColorStop(0.52, "#0b1113");
+        wash.addColorStop(1, "#11121a");
+        ctx.fillStyle = wash;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        const glow = ctx.createRadialGradient(730, 390, 40, 730, 390, 730);
+        glow.addColorStop(0, "rgba(67, 121, 103, .09)");
+        glow.addColorStop(0.62, "rgba(23, 46, 43, .035)");
+        glow.addColorStop(1, "rgba(5, 8, 10, .36)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(210, 235, 225, .035)";
+        for (let x = 32; x < WIDTH; x += 48) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke();
+        }
+        for (let y = 24; y < HEIGHT; y += 48) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WIDTH, y); ctx.stroke();
+        }
+
+        ctx.strokeStyle = "rgba(210, 235, 225, .12)";
+        ctx.beginPath(); ctx.moveTo(64, 83); ctx.lineTo(1216, 83); ctx.stroke();
+        ctx.fillStyle = "rgba(231, 240, 235, .48)";
+        ctx.font = "11px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.textAlign = "left";
+        ctx.fillText("FIELD NOTES     /     MOTION STUDY 01", 68, 61);
+        ctx.textAlign = "right";
+        ctx.fillText("12s     ·     30 FPS", 1212, 61);
+        ctx.textAlign = "left";
+
+        const reveal = smooth((t - 0.15) / 0.5);
+        ctx.fillStyle = alpha(COLORS[0], 0.9 * reveal);
+        ctx.beginPath(); ctx.arc(72, 117, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = alpha(COLORS[0], 0.72 * reveal);
+        ctx.font = "11px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.fillText("SIGNAL FLOW   /   01", 85, 121);
+        ctx.fillStyle = alpha(INK, 0.96 * reveal);
+        ctx.font = "600 43px 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif";
+        ctx.fillText("让信号，找到彼此。", 68, 174);
+
+        const subAlpha = smooth((t - 0.3) / 0.4);
+        let subline = "离散的词，正在寻找各自的位置";
+        if (t >= 2.6 && t < 6.8) subline = "相近的信号开始聚合，关系逐渐清晰";
+        else if (t >= 6.8) subline = "采集 · 理解 · 响应，成为一条完整路径";
+        ctx.fillStyle = alpha(MUTED, 0.95 * subAlpha);
+        ctx.font = "15px 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif";
+        ctx.fillText(subline, 70, 204);
+
+        const count = Math.round(12 * easeOut(t / 4.4));
+        ctx.textAlign = "right";
+        ctx.fillStyle = alpha(INK, 0.8);
+        ctx.font = "500 25px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.fillText(`${String(count).padStart(2, "0")} / 12`, 1208, 145);
+        ctx.fillStyle = alpha(MUTED, 0.72);
+        ctx.font = "10px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.fillText("SIGNALS ORGANIZED", 1208, 165);
+        ctx.textAlign = "left";
+      }
+
+      function drawGroups(t) {
+        const reveal = smooth((t - 2.4) / 1.4);
+        groups.forEach((group, index) => {
+          const x = GROUP_X[index];
+          roundRect(x, 235, 328, 340, 12);
+          ctx.fillStyle = alpha(group.color, 0.025 * reveal);
+          ctx.fill();
+          ctx.strokeStyle = alpha(group.color, 0.17 * reveal);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.fillStyle = alpha(group.color, 0.88 * reveal);
+          ctx.font = "600 17px 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif";
+          ctx.fillText(group.title, x + 14, 275);
+          ctx.fillStyle = alpha(MUTED, 0.68 * reveal);
+          ctx.font = "9px ui-monospace, SFMono-Regular, Consolas, monospace";
+          ctx.textAlign = "right";
+          ctx.fillText(group.note, x + 314, 274);
+          ctx.textAlign = "left";
+
+          ctx.strokeStyle = alpha(group.color, 0.22 * reveal);
+          ctx.beginPath(); ctx.moveTo(x + 12, 287); ctx.lineTo(x + 316, 287); ctx.stroke();
+        });
+
+        const linkReveal = smooth((t - 4.0) / 1.6) * (1 - 0.2 * smooth((t - 10.8) / 0.8));
+        for (let index = 0; index < 2; index += 1) {
+          const from = { x: GROUP_X[index] + 164, y: 235 };
+          const to = { x: GROUP_X[index + 1] + 164, y: 235 };
+          const midX = (from.x + to.x) / 2;
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y);
+          ctx.bezierCurveTo(midX - 42, 207, midX + 42, 207, to.x, to.y);
+          ctx.setLineDash([2, 8]);
+          ctx.lineDashOffset = -(t * 11 % 10);
+          ctx.strokeStyle = alpha(index === 0 ? COLORS[0] : COLORS[1], 0.4 * linkReveal);
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const wave = t < 5 ? 0 : t >= 11 ? 1 : ((t - 5) % 2.2) / 2.2;
+          const p = smooth(wave);
+          const px = lerp(from.x, to.x, p);
+          const py = 235 - Math.sin(p * Math.PI) * 22;
+          ctx.fillStyle = alpha(index === 0 ? COLORS[0] : COLORS[1], 0.9 * linkReveal);
+          ctx.shadowColor = index === 0 ? COLORS[0] : COLORS[1];
+          ctx.shadowBlur = 12 * linkReveal;
+          ctx.beginPath(); ctx.arc(px, py, 3.4, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      function pointOnCurve(start, control1, control2, end, p) {
+        const q = 1 - p;
+        return {
+          x: q * q * q * start.x + 3 * q * q * p * control1.x + 3 * q * p * p * control2.x + p * p * p * end.x,
+          y: q * q * q * start.y + 3 * q * q * p * control1.y + 3 * q * p * p * control2.y + p * p * p * end.y,
+        };
+      }
+
+      function drawRoutes(t, motions) {
+        const routeFade = 0.15 + 0.5 * (1 - smooth((t - 3.4) / 2.1));
+        motions.forEach((motion, index) => {
+          const { start, end, control1, control2, progress, color } = motion;
+          ctx.beginPath();
+          ctx.moveTo(start.x + 72, start.y + 22);
+          const first = pointOnCurve(start, control1, control2, end, progress);
+          const point = pointOnCurve(start, control1, control2, end, 1);
+          ctx.bezierCurveTo(control1.x, control1.y, control2.x, control2.y, point.x, point.y);
+          ctx.strokeStyle = alpha(color, routeFade * (0.09 + 0.06 * ((index % 3) / 2)));
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          if (progress > 0.03 && progress < 0.97) {
+            ctx.fillStyle = alpha(color, 0.65 * routeFade);
+            ctx.beginPath(); ctx.arc(first.x, first.y, 2.1, 0, Math.PI * 2); ctx.fill();
+          }
+        });
+      }
+
+      function drawCard(item, index, t, motion) {
+        const { start, end, control1, control2, progress } = motion;
+        const center = pointOnCurve(start, control1, control2, end, progress);
+        const width = lerp(186, CARD_WIDTH, smooth(progress));
+        const height = CARD_HEIGHT;
+        const x = center.x - width / 2;
+        const y = center.y - height / 2;
+        const group = groups[item.group];
+        const settled = smooth((t - 4.4) / 2.2);
+        const lift = 1 + (1 - progress) * 0.012;
+
+        ctx.save();
+        ctx.translate(center.x, center.y);
+        ctx.scale(lift, lift);
+        ctx.translate(-center.x, -center.y);
+        roundRect(x, y, width, height, 7);
+        ctx.fillStyle = `rgba(18, 27, 29, ${0.88 + 0.08 * progress})`;
+        ctx.fill();
+        ctx.strokeStyle = alpha(group.color, 0.17 + 0.28 * progress + 0.13 * settled);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = alpha(group.color, 0.88);
+        roundRect(x + 12, y + 14, 5, 16, 2.5);
+        ctx.fill();
+        ctx.textAlign = "left";
+        ctx.fillStyle = alpha(INK, 0.95);
+        ctx.font = "500 15px 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif";
+        ctx.fillText(item.label, x + 27, y + 27);
+        ctx.fillStyle = alpha(MUTED, 0.62 + 0.22 * progress);
+        ctx.font = "9px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.fillText(item.kind, x + 78, y + 27);
+
+        const nodeX = x + width - 17;
+        ctx.fillStyle = alpha(group.color, 0.38 + 0.48 * progress);
+        ctx.beginPath(); ctx.arc(nodeX, center.y, 2.4, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawFooter(t) {
+        const reveal = smooth((t - 5.5) / 1.5);
+        ctx.strokeStyle = alpha(INK, 0.11 * reveal);
+        ctx.beginPath(); ctx.moveTo(68, 609); ctx.lineTo(1212, 609); ctx.stroke();
+        ctx.fillStyle = alpha(MUTED, 0.75 * reveal);
+        ctx.font = "10px ui-monospace, SFMono-Regular, Consolas, monospace";
+        ctx.fillText("INPUT", 70, 638);
+        ctx.fillText("RELATION", 568, 638);
+        ctx.fillText("RESPONSE", 1110, 638);
+
+        const barX = 70;
+        const barY = 649;
+        const totalWidth = 1140;
+        const progress = easeOut(t / DURATION);
+        ctx.fillStyle = alpha(INK, 0.09 * reveal);
+        roundRect(barX, barY, totalWidth, 2, 1);
+        ctx.fill();
+        const fillGradient = ctx.createLinearGradient(barX, 0, barX + totalWidth, 0);
+        fillGradient.addColorStop(0, COLORS[0]);
+        fillGradient.addColorStop(0.52, COLORS[1]);
+        fillGradient.addColorStop(1, COLORS[2]);
+        ctx.fillStyle = alpha(COLORS[0], reveal);
+        roundRect(barX, barY, totalWidth * progress, 2, 1);
+        ctx.fillStyle = fillGradient;
+        ctx.fill();
+
+        const endReveal = smooth((t - 9.4) / 1.8);
+        ctx.textAlign = "right";
+        ctx.fillStyle = alpha(INK, 0.86 * endReveal);
+        ctx.font = "500 12px 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif";
+        ctx.fillText("结构已就位", 1208, 683);
+        ctx.textAlign = "left";
+      }
+
+      function drawFrame(seconds) {
+        const t = clamp(seconds, 0, DURATION);
+        drawBackground(t);
+        drawGroups(t);
+
+        const motions = items.map((item, index) => {
+          const startPoint = sources[index];
+          const sourceCenter = { x: startPoint.x + 93, y: startPoint.y + 22 };
+          const targetCenter = { x: CARD_X[item.group] + CARD_WIDTH / 2, y: CARD_Y[index % 4] + CARD_HEIGHT / 2 };
+          const delay = 0.48 + (index % 4) * 0.12 + Math.floor(index / 4) * 0.1;
+          const progress = easeOut((t - delay) / 4.8);
+          const bend = (index % 2 === 0 ? -1 : 1) * (54 + (index % 4) * 12);
+          const control1 = { x: lerp(sourceCenter.x, targetCenter.x, 0.35), y: sourceCenter.y + bend };
+          const control2 = { x: lerp(sourceCenter.x, targetCenter.x, 0.72), y: targetCenter.y - bend * 0.5 };
+          return {
+            start: sourceCenter,
+            end: targetCenter,
+            control1,
+            control2,
+            progress,
+            color: groups[item.group].color,
+          };
+        });
+
+        drawRoutes(t, motions);
+        items.forEach((item, index) => drawCard(item, index, t, motions[index]));
+        drawFooter(t);
+      }
+
+      function pause() {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = 0;
+        isPlaying = false;
+        updateControls();
+      }
+
+      function paint(seconds) {
+        currentTime = clamp(seconds, 0, DURATION);
+        drawFrame(currentTime);
+        updateControls();
+      }
+
+      function advance(timestamp) {
+        if (!isPlaying) return;
+        const nextTime = (timestamp - playOrigin) / 1000;
+        if (nextTime >= DURATION) {
+          paint(DURATION);
+          pause();
+          return;
+        }
+        paint(nextTime);
+        frameId = requestAnimationFrame(advance);
+      }
+
+      const ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+        drawFrame(0);
+        updateControls();
+      });
+
+      const video = {
+        width: WIDTH,
+        height: HEIGHT,
+        duration: DURATION,
+        fps: FPS,
+        ready,
+        async seek(seconds) {
+          await ready;
+          if (!Number.isFinite(Number(seconds))) throw new TypeError("seek(seconds) requires a finite number");
+          pause();
+          paint(Number(seconds));
+        },
+        play() {
+          if (isPlaying) return;
+          if (currentTime >= DURATION) paint(0);
+          isPlaying = true;
+          playOrigin = performance.now() - currentTime * 1000;
+          frameId = requestAnimationFrame(advance);
+          updateControls();
+        },
+        pause,
+      };
+      Object.defineProperties(video, {
+        time: { enumerable: true, get: () => currentTime },
+        playing: { enumerable: true, get: () => isPlaying },
+      });
+      window.__video = video;
+
+      playButton.addEventListener("click", () => {
+        if (isPlaying) pause();
+        else video.play();
+      });
+      restartButton.addEventListener("click", async () => {
+        await video.seek(0);
+        video.play();
+      });
+      slider.addEventListener("input", () => {
+        void video.seek(Number(slider.value) / 1000);
+      });
+
+      if (new URLSearchParams(location.search).get("autoplay") !== "0") {
+        ready.then(() => video.play());
+      }
+    })();
+  </script>
+</body>
+</html>

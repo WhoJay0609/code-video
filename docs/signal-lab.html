@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Two frequencies, one trace — a signal lab</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; background: #e9edf0; color: #202c34; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #fff, #e9edf0 82%); }
+    .preview { padding: 28px 16px 24px; }
+    [data-video-stage] {
+      width: min(1280px, calc(100vw - 32px), calc((100vh - 150px) * 16 / 9));
+      aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden; border: 1px solid #d9e0e4;
+      border-radius: 10px; background: #f8fafb; box-shadow: 0 24px 80px rgba(41, 64, 78, .13);
+    }
+    svg { display: block; width: 100%; height: 100%; }
+    [data-video-controls] {
+      display: flex; align-items: center; gap: 12px; width: min(1280px, calc(100vw - 32px));
+      margin: 13px auto 0; color: #4c5a63; font: 12px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    button { min-width: 74px; padding: 9px 12px; border: 1px solid #c9d2d8; border-radius: 6px; background: #fbfcfc; color: #233640; font: inherit; cursor: pointer; }
+    button:hover { border-color: #276bba; color: #185a9f; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #347dcb; outline-offset: 3px; }
+    output { min-width: 112px; text-align: center; font-variant-numeric: tabular-nums; }
+    input[type="range"] { flex: 1; min-width: 60px; accent-color: #347dcb; cursor: pointer; }
+    .hint { color: #76838a; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .preview { padding: 18px 10px; }
+      [data-video-stage], [data-video-controls] { width: calc(100vw - 20px); }
+      [data-video-controls] { gap: 7px; flex-wrap: wrap; }
+      .hint { display: none; }
+      output { min-width: 98px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <section data-video-stage data-width="1280" data-height="720" aria-label="A synthetic signal made from one hertz and three hertz sine waves">
+      <svg id="artboard" viewBox="0 0 1280 720" role="img" aria-labelledby="scene-title scene-description" xmlns="http://www.w3.org/2000/svg">
+        <title id="scene-title">Two frequencies, one trace</title>
+        <desc id="scene-description">A one hertz sine wave and a half-amplitude three hertz sine wave add together. A moving probe shows reinforcement and cancellation. The final spectrum has amplitudes one and one half.</desc>
+        <defs>
+          <pattern id="paper-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M32 0H0V32" fill="none" stroke="#7b93a1" stroke-opacity=".075" stroke-width="1"/>
+          </pattern>
+          <linearGradient id="panel-shade" x2="0" y2="1">
+            <stop stop-color="#fff"/><stop offset="1" stop-color="#f2f6f8"/>
+          </linearGradient>
+        </defs>
+        <rect width="1280" height="720" fill="#f8fafb"/>
+        <rect width="1280" height="720" fill="url(#paper-grid)"/>
+        <path d="M72 81H1208" stroke="#d2dce1"/>
+        <circle cx="81" cy="54" r="4.5" fill="#2d77c5"/>
+        <text x="95" y="58" fill="#344b59" font-size="10" font-weight="700" letter-spacing="2">FIELD NOTE  /  SIGNAL LAB 02</text>
+        <text x="1207" y="58" text-anchor="end" fill="#70808a" font-size="10" letter-spacing="1.2">A SYNTHETIC EXAMPLE · 30 FPS</text>
+        <text x="76" y="132" fill="#1f2e37" font-family="Georgia, 'Times New Roman', serif" font-size="39" letter-spacing="-.6">Two frequencies. One visible trace.</text>
+        <text x="78" y="160" fill="#667781" font-size="13">Build the signal in parts, then follow one shared point through the sum.</text>
+        <g>
+          <rect x="846" y="96" width="360" height="77" rx="9" fill="#fff" stroke="#dce4e8"/>
+          <text x="870" y="121" fill="#71828c" font-size="9" font-weight="700" letter-spacing="1.4">THE SIGNAL WE WILL BUILD</text>
+          <text x="870" y="151" fill="#203440" font-family="Georgia, 'Times New Roman', serif" font-size="22">
+            f(t) = sin(2πt) + 0.5 sin(6πt)
+          </text>
+        </g>
+        <text id="stage-caption" x="78" y="192" fill="#647681" font-size="10" font-weight="700" letter-spacing="1.5">01  /  COMPONENTS</text>
+        <text id="stage-note" x="1205" y="192" text-anchor="end" fill="#7a8991" font-family="ui-monospace, monospace" font-size="9">TWO SECONDS OF A SYNTHETIC SIGNAL</text>
+
+        <g id="wave-analysis">
+          <g id="grid-lines" stroke="#dbe3e7" stroke-width="1">
+            <path d="M250 219V577M346 219V577M442 219V577M538 219V577M634 219V577M730 219V577M826 219V577M922 219V577M1018 219V577"/>
+          </g>
+          <g stroke="#aab9c1" stroke-width="1.1">
+            <path d="M250 286H1018M250 401H1018M250 523H1018"/>
+          </g>
+          <g fill="#60727d" font-family="ui-monospace, monospace">
+            <text x="250" y="603" text-anchor="middle" font-size="9">0.0 s</text>
+            <text x="442" y="603" text-anchor="middle" font-size="9">0.5 s</text>
+            <text x="634" y="603" text-anchor="middle" font-size="9">1.0 s</text>
+            <text x="826" y="603" text-anchor="middle" font-size="9">1.5 s</text>
+            <text x="1018" y="603" text-anchor="middle" font-size="9">2.0 s</text>
+          </g>
+          <g id="fundamental-label" opacity="0">
+            <rect x="76" y="231" width="132" height="34" rx="6" fill="#eaf2fa"/>
+            <circle cx="91" cy="248" r="4" fill="#347ec6"/>
+            <text x="103" y="247" fill="#285e91" font-size="10" font-weight="700" letter-spacing=".6">1 Hz</text>
+            <text x="103" y="259" fill="#73828a" font-size="8">AMPLITUDE 1.0</text>
+            <text x="78" y="282" fill="#667985" font-size="9">slow component</text>
+          </g>
+          <g id="third-label" opacity="0">
+            <rect x="76" y="360" width="132" height="34" rx="6" fill="#fff0e7"/>
+            <circle cx="91" cy="377" r="4" fill="#e88949"/>
+            <text x="103" y="376" fill="#9e5424" font-size="10" font-weight="700" letter-spacing=".6">3 Hz</text>
+            <text x="103" y="388" fill="#88776c" font-size="8">AMPLITUDE 0.5</text>
+            <text x="78" y="411" fill="#667985" font-size="9">faster, half-height</text>
+          </g>
+          <g id="sum-label" opacity="0">
+            <rect x="76" y="483" width="132" height="34" rx="6" fill="#eaf0f2"/>
+            <circle cx="91" cy="500" r="4" fill="#283b46"/>
+            <text x="103" y="499" fill="#324954" font-size="10" font-weight="700" letter-spacing=".6">SUM</text>
+            <text x="103" y="511" fill="#73828a" font-size="8">SAME TIME AXIS</text>
+            <text x="78" y="534" fill="#667985" font-size="9">point by point</text>
+          </g>
+          <path id="fundamental-path" d="" fill="none" stroke="#347ec6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+          <path id="third-path" d="" fill="none" stroke="#e88949" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+          <path id="sum-path" d="" fill="none" stroke="#283b46" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+          <g id="probe-layer" opacity="0">
+            <path id="probe-guide" d="" fill="none" stroke="#536d7b" stroke-width="1.15" stroke-dasharray="3 5" opacity=".74"/>
+            <circle id="probe-fund-dot" cx="0" cy="0" r="5.2" fill="#347ec6" stroke="#fff" stroke-width="2"/>
+            <circle id="probe-third-dot" cx="0" cy="0" r="5.2" fill="#e88949" stroke="#fff" stroke-width="2"/>
+            <circle id="probe-sum-dot" cx="0" cy="0" r="6" fill="#283b46" stroke="#fff" stroke-width="2"/>
+          </g>
+          <text x="251" y="621" fill="#73828a" font-size="8">TIME WINDOW  /  t IN SECONDS</text>
+          <g id="probe-card" opacity="0">
+            <rect x="1050" y="226" width="166" height="332" rx="9" fill="#fff" stroke="#dce4e8"/>
+            <text x="1067" y="251" fill="#71828c" font-size="8" font-weight="700" letter-spacing="1.1">ONE SHARED INSTANT</text>
+            <text id="probe-time" x="1067" y="282" fill="#233945" font-family="Georgia, 'Times New Roman', serif" font-size="22">t = 0.125 s</text>
+            <path d="M1067 297H1199" stroke="#e2e8eb"/>
+            <circle cx="1072" cy="323" r="4" fill="#347ec6"/>
+            <text x="1084" y="327" fill="#62747d" font-size="9">1 Hz part</text>
+            <text id="probe-fund-value" x="1199" y="328" text-anchor="end" fill="#285e91" font-family="ui-monospace, monospace" font-size="11">+0.71</text>
+            <circle cx="1072" cy="355" r="4" fill="#e88949"/>
+            <text x="1084" y="359" fill="#62747d" font-size="9">3 Hz part</text>
+            <text id="probe-third-value" x="1199" y="360" text-anchor="end" fill="#a3592e" font-family="ui-monospace, monospace" font-size="11">+0.35</text>
+            <path d="M1067 376H1199" stroke="#e2e8eb"/>
+            <rect id="sign-band" x="1067" y="393" width="132" height="26" rx="13" fill="#e9f3ed"/>
+            <text id="sign-label" x="1133" y="410" text-anchor="middle" fill="#3f7254" font-size="8" font-weight="700" letter-spacing=".8">SAME SIGN · REINFORCE</text>
+            <text x="1067" y="445" fill="#75848b" font-size="8" letter-spacing=".8">THE RESULT</text>
+            <text id="probe-equation" x="1067" y="470" fill="#293d47" font-family="ui-monospace, monospace" font-size="11">0.71 + 0.35</text>
+            <text id="probe-result" x="1199" y="499" text-anchor="end" fill="#203a48" font-family="Georgia, 'Times New Roman', serif" font-size="26">= 1.06</text>
+            <text id="probe-explanation" x="1067" y="529" fill="#74828a" font-size="8">The waves add at this point.</text>
+          </g>
+        </g>
+
+        <g id="spectrum-panel" opacity="0">
+          <rect x="900" y="220" width="314" height="340" rx="10" fill="url(#panel-shade)" stroke="#d9e2e6"/>
+          <text x="923" y="250" fill="#6b7e88" font-size="9" font-weight="700" letter-spacing="1.2">AMPLITUDE SPECTRUM</text>
+          <text x="923" y="271" fill="#7b8990" font-size="9">Each line marks one component.</text>
+          <path d="M948 506H1181M948 324V506" fill="none" stroke="#82939c" stroke-width="1.1"/>
+          <path d="M948 415H1181M948 370H1181M948 460H1181" stroke="#dce4e8" stroke-dasharray="2 5"/>
+          <text x="939" y="509" text-anchor="end" fill="#73828a" font-family="ui-monospace, monospace" font-size="8">0</text>
+          <text x="939" y="419" text-anchor="end" fill="#73828a" font-family="ui-monospace, monospace" font-size="8">0.5</text>
+          <text x="939" y="329" text-anchor="end" fill="#73828a" font-family="ui-monospace, monospace" font-size="8">1.0</text>
+          <text x="949" y="312" fill="#73828a" font-size="8">AMPLITUDE</text>
+          <rect id="bar-one" x="986" y="506" width="58" height="0" rx="4" fill="#347ec6"/>
+          <rect id="bar-three" x="1091" y="506" width="58" height="0" rx="4" fill="#e88949"/>
+          <text id="bar-one-value" x="1015" y="492" text-anchor="middle" fill="#285e91" font-family="ui-monospace, monospace" font-size="10" opacity="0">1.00</text>
+          <text id="bar-three-value" x="1120" y="492" text-anchor="middle" fill="#a3592e" font-family="ui-monospace, monospace" font-size="10" opacity="0">0.50</text>
+          <text x="1015" y="526" text-anchor="middle" fill="#445b68" font-size="10">1 Hz</text>
+          <text x="1120" y="526" text-anchor="middle" fill="#445b68" font-size="10">3 Hz</text>
+          <text x="923" y="550" fill="#71818a" font-size="8">Synthetic components · amplitudes 1 and 0.5</text>
+        </g>
+
+        <path d="M72 647H1208" stroke="#d2dce1"/>
+        <text x="76" y="672" fill="#62737d" font-size="9" font-weight="700" letter-spacing=".65">ILLUSTRATIVE SYNTHETIC SIGNAL — NOT MEASURED DATA</text>
+        <text x="1207" y="672" text-anchor="end" fill="#7a8990" font-family="ui-monospace, monospace" font-size="9">COMPONENTS → SUM → SPECTRUM</text>
+      </svg>
+    </section>
+    <div data-video-controls aria-label="Video controls">
+      <button type="button" data-play aria-label="Play video">Play</button>
+      <button type="button" data-restart aria-label="Restart video">Restart</button>
+      <output data-readout for="timeline">00:00.0 / 00:18.0</output>
+      <input id="timeline" type="range" min="0" max="18000" step="1" value="0" aria-label="Video time">
+      <span class="hint">Drag to inspect any frame</span>
+    </div>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+      const WIDTH = 1280;
+      const HEIGHT = 720;
+      const DURATION = 18;
+      const FPS = 30;
+      const X0 = 250;
+      const X1 = 1018;
+      const BASE = [286, 401, 523];
+      const SCALE = 43;
+      // Storyboard: 0–2 pose the equation; 2–4 draw the 1 Hz component;
+      // 4–6 draw the half-height 3 Hz component; 6–7.8 reveal their pointwise sum;
+      // 7.8–10.3 move one probe from reinforcement to cancellation;
+      // 10.3–12.2 hold the comparison; 12.2–15.5 compress the traces and reveal
+      // their two spectral amplitudes; 15.5–18 hold the complete reading.
+      // Sequential reveals and a concurrent shared-time probe borrow the staged
+      // causality of animation-flow systems; this is a dependency-free rendering.
+      const SCENES = [
+        { at: 0, name: "question" }, { at: 2, name: "first component" },
+        { at: 4, name: "third harmonic" }, { at: 6, name: "sum" },
+        { at: 7.8, name: "probe" }, { at: 12.2, name: "spectrum" },
+        { at: 15.5, name: "reading hold" },
+      ];
+      const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+      const lerp = (a, b, p) => a + (b - a) * p;
+      const smooth = (v) => { const x = clamp(v); return x * x * (3 - 2 * x); };
+      const elem = (id) => document.getElementById(id);
+      const fundPath = elem("fundamental-path");
+      const thirdPath = elem("third-path");
+      const sumPath = elem("sum-path");
+      const plot = (fn, baseline, scale) => {
+        const samples = 520;
+        let d = "";
+        for (let i = 0; i <= samples; i += 1) {
+          const seconds = 2 * i / samples;
+          const x = X0 + (X1 - X0) * i / samples;
+          const y = baseline - scale * fn(seconds);
+          d += (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+        }
+        return d.trim();
+      };
+      const fund = (t) => Math.sin(2 * Math.PI * t);
+      const third = (t) => .5 * Math.sin(6 * Math.PI * t);
+      const total = (t) => fund(t) + third(t);
+      const mapX = (seconds) => X0 + (X1 - X0) * seconds / 2;
+      fundPath.setAttribute("d", plot(fund, BASE[0], SCALE));
+      thirdPath.setAttribute("d", plot(third, BASE[1], SCALE));
+      sumPath.setAttribute("d", plot(total, BASE[2], SCALE));
+      [fundPath, thirdPath, sumPath].forEach((path) => {
+        path.setAttribute("stroke-dasharray", "1");
+        path.setAttribute("stroke-dashoffset", "1");
+      });
+      const playButton = document.querySelector("[data-play]");
+      const restartButton = document.querySelector("[data-restart]");
+      const slider = document.querySelector("#timeline");
+      const readout = document.querySelector("[data-readout]");
+      let currentTime = 0;
+      let isPlaying = false;
+      let frameId = 0;
+      let playOrigin = 0;
+
+      function fmtTime(seconds) {
+        const whole = Math.floor(seconds);
+        return String(Math.floor(whole / 60)).padStart(2, "0") + ":" +
+          String(whole % 60).padStart(2, "0") + "." + Math.floor((seconds - whole) * 10);
+      }
+      function fmtValue(value) {
+        const safe = Math.abs(value) < .005 ? 0 : value;
+        return (safe >= 0 ? "+" : "−") + Math.abs(safe).toFixed(2);
+      }
+      function updateControls() {
+        const ended = currentTime >= DURATION;
+        playButton.textContent = isPlaying ? "Pause" : ended ? "Play again" : "Play";
+        playButton.setAttribute("aria-label", isPlaying ? "Pause video" : ended ? "Play again from the beginning" : "Play video");
+        slider.value = String(Math.round(currentTime * 1000));
+        readout.textContent = fmtTime(currentTime) + " / " + fmtTime(DURATION);
+      }
+      function opacity(id, amount) {
+        elem(id).setAttribute("opacity", String(clamp(amount)));
+      }
+      function drawStroke(path, amount) {
+        path.setAttribute("stroke-dashoffset", String(1 - clamp(amount)));
+      }
+      function drawFrame(seconds) {
+        const t = clamp(seconds, 0, DURATION);
+        currentTime = t;
+        const g1 = smooth((t - 1.9) / 1.15);
+        const g3 = smooth((t - 4.0) / 1.15);
+        const gs = smooth((t - 6.05) / 1.25);
+        const gp = smooth((t - 7.65) / .25) * (1 - smooth((t - 11.8) / .3));
+        const spec = smooth((t - 12.05) / 1.0);
+        opacity("fundamental-label", g1);
+        opacity("third-label", g3);
+        opacity("sum-label", gs);
+        opacity("probe-layer", gp);
+        opacity("probe-card", gp * (1 - spec));
+        opacity("spectrum-panel", spec);
+        elem("wave-analysis").setAttribute("transform", "translate(0 " + (40 * spec).toFixed(2) + ") scale(" +
+          (1 - .20 * spec).toFixed(4) + " " + (1 - .18 * spec).toFixed(4) + ")");
+        elem("stage-caption").textContent = spec > .55 ? "03  /  FREQUENCY VIEW" : t > 6.0 ? "02  /  POINTWISE SUM" : "01  /  COMPONENTS";
+        elem("stage-note").textContent = spec > .55 ? "THE TWO INPUT AMPLITUDES REMAIN VISIBLE" : "TWO SECONDS OF A SYNTHETIC SIGNAL";
+        drawStroke(fundPath, smooth((t - 2.0) / 1.55));
+        drawStroke(thirdPath, smooth((t - 4.05) / 1.55));
+        drawStroke(sumPath, smooth((t - 6.1) / 1.55));
+
+        const probeP = smooth((t - 7.8) / 2.5);
+        const sample = lerp(.125, .25, probeP);
+        const v1 = fund(sample);
+        const v3 = third(sample);
+        const vs = v1 + v3;
+        const x = mapX(sample);
+        const y1 = BASE[0] - SCALE * v1;
+        const y3 = BASE[1] - SCALE * v3;
+        const ys = BASE[2] - SCALE * vs;
+        elem("probe-guide").setAttribute("d", "M" + x.toFixed(2) + " 218V584");
+        elem("probe-fund-dot").setAttribute("cx", String(x));
+        elem("probe-fund-dot").setAttribute("cy", String(y1));
+        elem("probe-third-dot").setAttribute("cx", String(x));
+        elem("probe-third-dot").setAttribute("cy", String(y3));
+        elem("probe-sum-dot").setAttribute("cx", String(x));
+        elem("probe-sum-dot").setAttribute("cy", String(ys));
+        elem("probe-time").textContent = "t = " + sample.toFixed(3) + " s";
+        elem("probe-fund-value").textContent = fmtValue(v1);
+        elem("probe-third-value").textContent = fmtValue(v3);
+        const sameSign = v1 * v3 >= 0;
+        elem("sign-band").setAttribute("fill", sameSign ? "#e9f3ed" : "#fbefe7");
+        elem("sign-label").setAttribute("fill", sameSign ? "#3f7254" : "#a45d33");
+        elem("sign-label").textContent = sameSign ? "SAME SIGN · REINFORCE" : "OPPOSITE · PARTIAL CANCEL";
+        elem("probe-equation").textContent = Math.abs(v1).toFixed(2) + (v3 < 0 ? " − " : " + ") + Math.abs(v3).toFixed(2);
+        elem("probe-result").textContent = "≈ " + vs.toFixed(2);
+        elem("probe-explanation").textContent = sameSign ? "The waves add at this point." : "The smaller wave subtracts.";
+
+        const bars = smooth((t - 13.0) / 1.6);
+        const firstHeight = 180 * bars;
+        const thirdHeight = 90 * bars;
+        elem("bar-one").setAttribute("y", String(506 - firstHeight));
+        elem("bar-one").setAttribute("height", String(firstHeight));
+        elem("bar-three").setAttribute("y", String(506 - thirdHeight));
+        elem("bar-three").setAttribute("height", String(thirdHeight));
+        elem("bar-one-value").setAttribute("y", String(494 - firstHeight));
+        elem("bar-three-value").setAttribute("y", String(494 - thirdHeight));
+        opacity("bar-one-value", bars);
+        opacity("bar-three-value", bars);
+      }
+      function pause() {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = 0;
+        isPlaying = false;
+        updateControls();
+      }
+      function paint(seconds) {
+        drawFrame(seconds);
+        updateControls();
+      }
+      function advance(timestamp) {
+        if (!isPlaying) return;
+        const next = (timestamp - playOrigin) / 1000;
+        if (next >= DURATION) {
+          paint(DURATION);
+          pause();
+          return;
+        }
+        paint(next);
+        frameId = requestAnimationFrame(advance);
+      }
+      const ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+        drawFrame(0);
+        updateControls();
+      });
+      const video = {
+        width: WIDTH, height: HEIGHT, duration: DURATION, fps: FPS, ready,
+        async seek(seconds) {
+          await ready;
+          const value = Number(seconds);
+          if (!Number.isFinite(value)) throw new TypeError("seek(seconds) requires a finite number");
+          pause();
+          paint(value);
+          await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+        },
+        play() {
+          if (isPlaying) return;
+          if (currentTime >= DURATION) paint(0);
+          isPlaying = true;
+          playOrigin = performance.now() - currentTime * 1000;
+          frameId = requestAnimationFrame(advance);
+          updateControls();
+        },
+        pause,
+      };
+      Object.defineProperties(video, {
+        time: { enumerable: true, get: () => currentTime },
+        playing: { enumerable: true, get: () => isPlaying },
+      });
+      window.__video = video;
+      playButton.addEventListener("click", () => isPlaying ? video.pause() : video.play());
+      restartButton.addEventListener("click", async () => { await video.seek(0); video.play(); });
+      slider.addEventListener("input", () => { void video.seek(Number(slider.value) / 1000); });
+      if (new URLSearchParams(location.search).get("autoplay") !== "0") ready.then(() => video.play());
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>One clear search — a UI motion study</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; background: #e9e4d9; color: #242b27; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; background: radial-gradient(ellipse at 49% 3%, #fbf8f0, #e9e4d9 82%); }
+    .preview { padding: 28px 16px 24px; }
+    [data-video-stage] {
+      width: min(1280px, calc(100vw - 32px), calc((100vh - 150px) * 16 / 9));
+      aspect-ratio: 16 / 9; margin: 0 auto; overflow: hidden; border: 1px solid #ded8cb;
+      border-radius: 10px; background: #f5f1e8; box-shadow: 0 24px 80px rgba(49, 54, 48, .14);
+    }
+    svg { display: block; width: 100%; height: 100%; }
+    [data-video-controls] {
+      display: flex; align-items: center; gap: 12px; width: min(1280px, calc(100vw - 32px));
+      margin: 13px auto 0; color: #515a53; font: 12px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    button { min-width: 74px; padding: 9px 12px; border: 1px solid #c9c4b8; border-radius: 6px; background: #f7f4ec; color: #26332d; font: inherit; cursor: pointer; }
+    button:hover { border-color: #315e50; color: #174936; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #397761; outline-offset: 3px; }
+    output { min-width: 112px; text-align: center; font-variant-numeric: tabular-nums; }
+    input[type="range"] { flex: 1; min-width: 60px; accent-color: #3c7862; cursor: pointer; }
+    .hint { color: #77796f; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .preview { padding: 18px 10px; }
+      [data-video-stage], [data-video-controls] { width: calc(100vw - 20px); }
+      [data-video-controls] { gap: 7px; flex-wrap: wrap; }
+      .hint { display: none; }
+      output { min-width: 98px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <section data-video-stage data-width="1280" data-height="720" aria-label="A travel search transforms into a useful stay recommendation">
+      <svg id="artboard" viewBox="0 0 1280 720" role="img" aria-labelledby="scene-title scene-description" xmlns="http://www.w3.org/2000/svg">
+        <title id="scene-title">One clear search</title>
+        <desc id="scene-description">A pointer starts a travel search, enters a preference, waits for a match, and saves a quiet hotel near a park.</desc>
+        <defs>
+          <pattern id="paper-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+            <path d="M36 0H0V36" fill="none" stroke="#89958b" stroke-opacity=".10" stroke-width="1"/>
+          </pattern>
+          <clipPath id="result-clip"><rect id="result-clip-rect" x="320" y="326" width="640" height="300" rx="22"/></clipPath>
+          <filter id="shell-shadow" x="-20%" y="-30%" width="140%" height="180%">
+            <feDropShadow dx="0" dy="15" stdDeviation="19" flood-color="#203b31" flood-opacity=".15"/>
+          </filter>
+          <linearGradient id="window-sky" x2="0" y2="1">
+            <stop stop-color="#d5e8dc"/><stop offset="1" stop-color="#f3edda"/>
+          </linearGradient>
+        </defs>
+        <rect width="1280" height="720" fill="#f5f1e8"/>
+        <rect width="1280" height="720" fill="url(#paper-grid)"/>
+        <circle cx="1106" cy="106" r="166" fill="#dce8dc" opacity=".26"/>
+        <path d="M0 552C217 513 308 581 486 557S821 495 1008 542s186 42 272 19v159H0Z" fill="#e9e6d9" opacity=".46"/>
+        <path d="M72 218H1208" stroke="#c9c5b9" stroke-width="1"/>
+        <circle cx="82" cy="63" r="5" fill="#3e7460"/>
+        <text x="96" y="68" fill="#314239" font-size="11" font-weight="700" letter-spacing="2.2">FIELD NOTES  /  INTERFACE 01</text>
+        <text x="1207" y="68" text-anchor="end" fill="#68736b" font-size="11" letter-spacing="1.4">A QUIETER KIND OF SEARCH</text>
+
+        <text x="92" y="140" fill="#243029" font-family="Georgia, 'Times New Roman', serif" font-size="42" letter-spacing="-.8">Find the feeling,</text>
+        <text x="92" y="184" fill="#243029" font-family="Georgia, 'Times New Roman', serif" font-size="42" letter-spacing="-.8">then find the place.</text>
+        <text x="94" y="204" fill="#6b756d" font-size="13" letter-spacing=".15">One small question can carry the whole trip.</text>
+        <text x="92" y="277" fill="#547263" font-size="10" font-weight="700" letter-spacing="1.8">A TRAVEL DESK, CONCEPT STUDY</text>
+        <text x="1208" y="277" text-anchor="end" fill="#7a8279" font-family="ui-monospace, monospace" font-size="10">01 — 05  /  ASK · SEARCH · SAVE</text>
+
+        <g id="object-group" filter="url(#shell-shadow)">
+          <rect id="morph-shell" x="510" y="326" width="260" height="72" rx="36" fill="#24584a" stroke="#24584a" stroke-width="1"/>
+          <g id="mode-button">
+            <text x="617" y="369" text-anchor="middle" fill="#fffdf7" font-size="15" font-weight="600" letter-spacing=".1">Find a place</text>
+            <circle cx="735" cy="362" r="18" fill="#fffdf7"/>
+            <path d="M728 362h13m-5-5 5 5-5 5" fill="none" stroke="#24584a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <g id="mode-search" opacity="0" aria-hidden="true">
+            <g id="search-leading">
+              <circle id="search-glass" cx="369" cy="362" r="7.5" fill="none" stroke="#77877b" stroke-width="1.7"/>
+              <path id="search-handle" d="m375 368 5 5" stroke="#77877b" stroke-width="1.7" stroke-linecap="round"/>
+              <text id="query-text" x="396" y="368" fill="#26352d" font-size="15"></text>
+              <path id="query-caret" d="M398 374v-19" stroke="#3d7b61" stroke-width="1.5" opacity="0"/>
+            </g>
+            <g id="search-submit">
+              <circle cx="910" cy="362" r="21" fill="#315f4e"/>
+              <path d="M902 362h14m-5-5 5 5-5 5" fill="none" stroke="#fffdf7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </g>
+          <g id="mode-progress" opacity="0" aria-hidden="true">
+            <g id="progress-copy">
+              <circle cx="369" cy="360" r="10" fill="none" stroke="#dbe5d9" stroke-width="2"/>
+              <path d="M369 350a10 10 0 0 1 10 10" fill="none" stroke="#487f66" stroke-width="2.4" stroke-linecap="round"/>
+              <text x="391" y="358" fill="#3f4b43" font-size="13" font-weight="600">Looking for a calmer morning</text>
+              <text id="progress-percent" x="920" y="358" text-anchor="end" fill="#68776c" font-family="ui-monospace, monospace" font-size="10">00%</text>
+            </g>
+            <rect x="391" y="374" width="529" height="3" rx="1.5" fill="#e5e9df"/>
+            <rect id="progress-fill" x="391" y="374" width="0" height="3" rx="1.5" fill="#4c8b6c"/>
+          </g>
+          <g id="mode-result" opacity="0" clip-path="url(#result-clip)" aria-hidden="true">
+            <text x="350" y="355" fill="#547866" font-size="9" font-weight="700" letter-spacing="1.7">MATCHED TO YOUR MORNING</text>
+            <text x="930" y="355" text-anchor="end" fill="#81887f" font-family="ui-monospace, monospace" font-size="9">STAY  /  01 OF 18</text>
+            <g aria-hidden="true">
+              <rect x="350" y="376" width="154" height="142" rx="12" fill="#e7eddf"/>
+              <rect x="359" y="385" width="136" height="124" rx="8" fill="url(#window-sky)"/>
+              <path d="M359 476c23-19 41-11 58-27 17-15 44-14 78 7v53H359Z" fill="#9ebc9c"/>
+              <path d="M359 494c27-17 50-6 70-20 21-14 37-10 66 5v30H359Z" fill="#749378"/>
+              <path d="M384 442v-23c0-12 9-20 20-20s20 8 20 20v23" fill="#f4f0e7" stroke="#6d8978" stroke-width="2"/>
+              <path d="M404 399v43m-20-22h40" stroke="#6d8978" stroke-width="1.5"/>
+              <path d="M371 476c3-17 7-27 15-34m-12 29c-12-8-12-16-9-22m10 15c8-10 15-10 20-8" fill="none" stroke="#496e54" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="381" cy="473" r="4" fill="#678d66"/>
+              <circle cx="396" cy="463" r="3.5" fill="#8aa579"/>
+            </g>
+            <text x="528" y="399" fill="#7b877c" font-size="10" letter-spacing=".7">CEDAR &amp; ALDER  ·  PORTLAND</text>
+            <text x="528" y="431" fill="#28342d" font-family="Georgia, 'Times New Roman', serif" font-size="25">The Alder House</text>
+            <circle cx="535" cy="457" r="3" fill="#c28b49"/>
+            <text x="546" y="461" fill="#48534c" font-size="12">4.9</text>
+            <text x="576" y="461" fill="#879087" font-size="12">·</text>
+            <text x="589" y="461" fill="#48534c" font-size="12">Quiet garden rooms</text>
+            <path d="M528 479H930" stroke="#e8e9e1"/>
+            <text x="528" y="499" fill="#526158" font-size="11">Six minutes to the park. Coffee downstairs at 7.</text>
+            <text x="528" y="518" fill="#7b877c" font-size="10">Free cancellation  ·  Walkable mornings</text>
+            <g id="save-cta">
+              <rect x="781" y="540" width="149" height="40" rx="20" fill="#285c4b"/>
+              <text id="save-label" x="855.5" y="565" text-anchor="middle" fill="#fffdf7" font-size="11" font-weight="600">Save this stay</text>
+              <path id="save-check" d="M806 560l4 4 8-9" fill="none" stroke="#fffdf7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+            </g>
+            <path d="M350 541H930" stroke="#e8e9e1"/>
+            <text id="saved-note" x="350" y="568" fill="#53655a" font-size="10" letter-spacing=".2" opacity="0">SHORTLISTED FOR YOUR WEEKEND</text>
+            <text id="saved-date" x="350" y="593" fill="#858d83" font-family="ui-monospace, monospace" font-size="9" opacity="0">SAT · 09:00   /   NEAR LAUREL PARK</text>
+            <g id="result-tags" opacity="0">
+              <rect x="350" y="553" width="116" height="25" rx="12.5" fill="#edf2e9"/>
+              <text x="408" y="569" text-anchor="middle" fill="#476555" font-size="9">quiet mornings</text>
+              <rect x="474" y="553" width="100" height="25" rx="12.5" fill="#edf2e9"/>
+              <text x="524" y="569" text-anchor="middle" fill="#476555" font-size="9">near the park</text>
+              <rect x="582" y="553" width="115" height="25" rx="12.5" fill="#edf2e9"/>
+              <text x="639.5" y="569" text-anchor="middle" fill="#476555" font-size="9">easy to cancel</text>
+            </g>
+          </g>
+        </g>
+
+        <text id="footnote-left" x="92" y="666" fill="#777e73" font-size="10" letter-spacing=".5">A CONCEPT INTERFACE  ·  EVERY STATE HAS A REASON</text>
+        <text id="footnote-right" x="1208" y="666" text-anchor="end" fill="#777e73" font-family="ui-monospace, monospace" font-size="10">0:00 — 0:16</text>
+        <path d="M72 683H1208" stroke="#d3cfc2"/>
+
+        <g id="pointer" pointer-events="none" opacity="0">
+          <circle id="pointer-halo" cx="0" cy="0" r="20" fill="#315f4e" opacity=".10"/>
+          <path d="M1 0 1 23 7 17 13 30 18 27 12 15 22 15Z" fill="#fffdf8" stroke="#1f332a" stroke-width="1.7" stroke-linejoin="round"/>
+        </g>
+        <circle id="click-ring" cx="0" cy="0" r="2" fill="none" stroke="#3c8064" stroke-width="2" opacity="0" pointer-events="none"/>
+      </svg>
+    </section>
+    <div data-video-controls aria-label="Video controls">
+      <button type="button" data-play aria-label="Play video">Play</button>
+      <button type="button" data-restart aria-label="Restart video">Restart</button>
+      <output data-readout for="timeline">00:00.0 / 00:16.0</output>
+      <input id="timeline" type="range" min="0" max="16000" step="1" value="0" aria-label="Video time">
+      <span class="hint">Drag to inspect any frame</span>
+    </div>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+      const WIDTH = 1280;
+      const HEIGHT = 720;
+      const DURATION = 16;
+      const FPS = 30;
+      // Storyboard: 0–1.8 introduce the task; 1.8–5.3 the button opens into a search;
+      // 5.3–7.4 the submitted query resolves; 7.4–9.4 one relevant stay arrives;
+      // 9.4–10.3 save the stay; 10.3–16 hold the composed itinerary details.
+      // The paused WAAPI shape track is a native currentTime-controlled mechanism;
+      // scene timing is authored here, not as a Motion Canvas adapter.
+      const SCENES = [
+        { at: 0, name: "invite" }, { at: 1.85, name: "search" },
+        { at: 5.32, name: "resolve" }, { at: 7.45, name: "result" },
+        { at: 10.15, name: "save" }, { at: 11.45, name: "compose" },
+      ];
+      const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+      const lerp = (a, b, p) => a + (b - a) * p;
+      const smooth = (v) => { const x = clamp(v); return x * x * (3 - 2 * x); };
+      const elem = (id) => document.getElementById(id);
+      const mixColor = (a, b, p) => {
+        const from = Number.parseInt(a.slice(1), 16);
+        const to = Number.parseInt(b.slice(1), 16);
+        const part = (shift) => Math.round(lerp((from >> shift) & 255, (to >> shift) & 255, p)).toString(16).padStart(2, "0");
+        return "#" + part(16) + part(8) + part(0);
+      };
+      const shell = elem("morph-shell");
+      const modeButton = elem("mode-button");
+      const modeSearch = elem("mode-search");
+      const searchLeading = elem("search-leading");
+      const searchSubmit = elem("search-submit");
+      const modeProgress = elem("mode-progress");
+      const modeResult = elem("mode-result");
+      const pointer = elem("pointer");
+      const ring = elem("click-ring");
+      const queryText = elem("query-text");
+      const queryCaret = elem("query-caret");
+      const progressFill = elem("progress-fill");
+      const resultClip = elem("result-clip-rect");
+      const playButton = document.querySelector("[data-play]");
+      const restartButton = document.querySelector("[data-restart]");
+      const slider = document.querySelector("#timeline");
+      const readout = document.querySelector("[data-readout]");
+      const QUERY = "quiet mornings, near a park";
+      const morph = shell.animate([
+        { offset: 0, x: "510px", y: "326px", width: "260px", height: "72px", rx: "36px", fill: "#24584a", stroke: "#24584a" },
+        { offset: .05, x: "510px", y: "326px", width: "260px", height: "72px", rx: "36px", fill: "#24584a", stroke: "#24584a" },
+        { offset: .40, x: "340px", y: "326px", width: "600px", height: "72px", rx: "18px", fill: "#fffefa", stroke: "#d8ded3" },
+        { offset: .45, x: "340px", y: "326px", width: "600px", height: "72px", rx: "18px", fill: "#fffefa", stroke: "#d8ded3" },
+        { offset: .50, x: "340px", y: "326px", width: "600px", height: "82px", rx: "14px", fill: "#fffefa", stroke: "#d8ded3" },
+        { offset: .70, x: "340px", y: "326px", width: "600px", height: "82px", rx: "14px", fill: "#fffefa", stroke: "#d8ded3" },
+        { offset: .94, x: "320px", y: "326px", width: "640px", height: "300px", rx: "22px", fill: "#fffefa", stroke: "#d8ded3" },
+        { offset: 1, x: "320px", y: "326px", width: "640px", height: "300px", rx: "22px", fill: "#fffefa", stroke: "#d8ded3" },
+      ], { duration: 8000, fill: "both", easing: "linear" });
+      morph.pause();
+      morph.currentTime = 0;
+      let currentTime = 0;
+      let isPlaying = false;
+      let frameId = 0;
+      let playOrigin = 0;
+
+      function pointAt(t) {
+        const keys = [
+          [0, 300, 510], [1.15, 492, 410], [1.85, 633, 360],
+          [2.2, 600, 448], [3.4, 585, 448], [4.15, 710, 450], [5.32, 910, 362], [6.2, 920, 393],
+          [8.35, 864, 475], [10.15, 854, 558], [10.62, 854, 558],
+          [11.15, 1170, 670], [12.15, 1170, 670], [13.0, 1170, 670],
+        ];
+        if (t <= keys[0][0]) return [keys[0][1], keys[0][2]];
+        for (let i = 1; i < keys.length; i += 1) {
+          if (t <= keys[i][0]) {
+            const a = keys[i - 1], b = keys[i];
+            const p = smooth((t - a[0]) / (b[0] - a[0]));
+            return [lerp(a[1], b[1], p), lerp(a[2], b[2], p)];
+          }
+        }
+        return [keys[keys.length - 1][1], keys[keys.length - 1][2]];
+      }
+      function clickStrength(t, at) {
+        return 1 - clamp((t - at) / .42);
+      }
+      function formatTime(seconds) {
+        const whole = Math.floor(seconds);
+        return String(Math.floor(whole / 60)).padStart(2, "0") + ":" +
+          String(whole % 60).padStart(2, "0") + "." + Math.floor((seconds - whole) * 10);
+      }
+      function updateControls() {
+        const ended = currentTime >= DURATION;
+        playButton.textContent = isPlaying ? "Pause" : ended ? "Play again" : "Play";
+        playButton.setAttribute("aria-label", isPlaying ? "Pause video" : ended ? "Play again from the beginning" : "Play video");
+        slider.value = String(Math.round(currentTime * 1000));
+        readout.textContent = formatTime(currentTime) + " / " + formatTime(DURATION);
+      }
+      function setOpacity(node, value) {
+        node.setAttribute("opacity", String(clamp(value)));
+      }
+      function drawFrame(seconds) {
+        const t = clamp(seconds, 0, DURATION);
+        currentTime = t;
+        const morphLocal = clamp(t - 1.85, 0, 8);
+        morph.currentTime = morphLocal * 1000;
+        let shellHeight = 72;
+        let shellX = 510;
+        let shellWidth = 260;
+        if (morphLocal > .4 && morphLocal < 3.2) {
+          const p = (morphLocal - .4) / 2.8;
+          shellX = lerp(510, 340, p);
+          shellWidth = lerp(260, 600, p);
+        } else if (morphLocal >= 3.2 && morphLocal < 5.6) {
+          shellX = 340;
+          shellWidth = 600;
+        } else if (morphLocal >= 5.6 && morphLocal < 7.52) {
+          const p = (morphLocal - 5.6) / 1.92;
+          shellX = lerp(340, 320, p);
+          shellWidth = lerp(600, 640, p);
+        } else if (morphLocal >= 7.52) {
+          shellX = 320;
+          shellWidth = 640;
+        }
+        if (morphLocal > 3.6 && morphLocal < 4) shellHeight = lerp(72, 82, (morphLocal - 3.6) / .4);
+        else if (morphLocal >= 4 && morphLocal < 5.6) shellHeight = 82;
+        else if (morphLocal >= 5.6) shellHeight = lerp(82, 300, (morphLocal - 5.6) / 1.92);
+        const buttonAlpha = 1 - smooth((t - 1.95) / .35);
+        const searchAlpha = smooth((t - 2.18) / .22) * (1 - smooth((t - 5.34) / .18));
+        const progressAlpha = smooth((t - 5.48) / .16) * (1 - smooth((t - 7.30) / .25));
+        const resultAlpha = smooth((t - 7.42) / .24);
+        setOpacity(modeButton, buttonAlpha);
+        setOpacity(modeSearch, searchAlpha);
+        searchLeading.setAttribute("transform", "translate(" + (shellX - 340) + " 0)");
+        searchSubmit.setAttribute("transform", "translate(" + (shellX + shellWidth - 940) + " 0)");
+        setOpacity(modeProgress, progressAlpha);
+        setOpacity(elem("progress-copy"), 1 - smooth((t - 7.12) / .20));
+        setOpacity(modeResult, resultAlpha);
+
+        const typedCount = Math.floor(clamp((t - 2.22) / 2.0) * QUERY.length);
+        const availableCount = Math.max(0, Math.floor((shellWidth - 107) / 7.2));
+        const count = Math.min(typedCount, availableCount);
+        queryText.textContent = QUERY.slice(0, count);
+        const ink = mixColor("#f5f3eb", "#34443a", smooth((t - 2.55) / 1.25));
+        elem("search-glass").setAttribute("stroke", ink);
+        elem("search-handle").setAttribute("stroke", ink);
+        queryText.setAttribute("fill", ink);
+        queryCaret.setAttribute("stroke", ink);
+        queryCaret.setAttribute("transform", "translate(" + (4 + queryText.getComputedTextLength()) + " 0)");
+        setOpacity(queryCaret, t >= 2.4 && t < 5.25 ? .9 : 0);
+        const searchProgress = smooth((t - 5.48) / 2.0);
+        progressFill.setAttribute("width", String(529 * searchProgress));
+        elem("progress-percent").textContent = String(Math.round(searchProgress * 100)).padStart(2, "0") + "%";
+
+        resultClip.setAttribute("height", String(shellHeight));
+        const saved = smooth((t - 10.15) / .28);
+        const tagReveal = smooth((t - 11.55) / .42);
+        setOpacity(elem("save-check"), saved);
+        elem("save-label").textContent = saved > .5 ? "Saved" : "Save this stay";
+        elem("save-label").setAttribute("x", saved > .5 ? "871" : "855.5");
+        setOpacity(elem("saved-note"), saved * (1 - tagReveal));
+        setOpacity(elem("saved-date"), saved);
+        setOpacity(elem("result-tags"), tagReveal);
+
+        const [px, py] = pointAt(t);
+        pointer.setAttribute("transform", "translate(" + px + " " + py + ")");
+        setOpacity(pointer, .92 * smooth((t - .38) / .24) * (1 - smooth((t - 10.72) / .48)));
+        const clickAt = [1.85, 5.32, 10.15];
+        let strongest = 0;
+        let ringAt = [px, py];
+        clickAt.forEach((time) => {
+          const strength = clickStrength(t, time);
+          if (strength > strongest && t >= time) {
+            strongest = strength;
+            ringAt = pointAt(time);
+          }
+        });
+        ring.setAttribute("cx", String(ringAt[0]));
+        ring.setAttribute("cy", String(ringAt[1]));
+        ring.setAttribute("r", String(5 + 27 * (1 - strongest)));
+        setOpacity(ring, strongest * .75);
+      }
+      function pause() {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = 0;
+        isPlaying = false;
+        updateControls();
+      }
+      function paint(seconds) {
+        drawFrame(seconds);
+        updateControls();
+      }
+      function advance(timestamp) {
+        if (!isPlaying) return;
+        const next = (timestamp - playOrigin) / 1000;
+        if (next >= DURATION) {
+          paint(DURATION);
+          pause();
+          return;
+        }
+        paint(next);
+        frameId = requestAnimationFrame(advance);
+      }
+      const ready = Promise.all([
+        document.fonts ? document.fonts.ready : Promise.resolve(),
+        morph.ready,
+      ]).then(() => new Promise((resolve) => requestAnimationFrame(resolve))).then(() => {
+        drawFrame(0);
+        updateControls();
+      });
+      const video = {
+        width: WIDTH, height: HEIGHT, duration: DURATION, fps: FPS, ready,
+        async seek(seconds) {
+          await ready;
+          const value = Number(seconds);
+          if (!Number.isFinite(value)) throw new TypeError("seek(seconds) requires a finite number");
+          pause();
+          paint(value);
+          await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+        },
+        play() {
+          if (isPlaying) return;
+          if (currentTime >= DURATION) paint(0);
+          isPlaying = true;
+          playOrigin = performance.now() - currentTime * 1000;
+          frameId = requestAnimationFrame(advance);
+          updateControls();
+        },
+        pause,
+      };
+      Object.defineProperties(video, {
+        time: { enumerable: true, get: () => currentTime },
+        playing: { enumerable: true, get: () => isPlaying },
+      });
+      window.__video = video;
+      playButton.addEventListener("click", () => isPlaying ? video.pause() : video.play());
+      restartButton.addEventListener("click", async () => { await video.seek(0); video.play(); });
+      slider.addEventListener("input", () => { void video.seek(Number(slider.value) / 1000); });
+      if (new URLSearchParams(location.search).get("autoplay") !== "0") ready.then(() => video.play());
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Video"
+  short_description: "用代码制作有叙事、镜头与动效的可播放短片，交付浏览器动画或视频文件"
+  default_prompt: "使用 $code-video 制作一段可直接观看的代码动画，按主题安排分镜、镜头和动效，并交付可播放作品与源码。"
