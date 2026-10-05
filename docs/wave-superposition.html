@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>两列波相遇时，位移怎样叠加？</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+      font-synthesis: none;
+      color: #24353c;
+      background: #eeede7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background: radial-gradient(ellipse at 50% 0, #fffefa 0, #f0efe9 78%);
+    }
+    .preview { padding: 24px 16px 20px; }
+    [data-video-stage] {
+      width: min(1280px, calc(100vw - 32px), calc((100vh - 150px) * 16 / 9));
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid #dcd9cd;
+      border-radius: 11px;
+      background: #fbfaf5;
+      box-shadow: 0 22px 68px rgba(62, 66, 59, .13);
+    }
+    [data-video-stage]:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      aspect-ratio: auto;
+      background: #fbfaf5;
+      box-shadow: none;
+    }
+    .preview:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 14px 16px;
+      background: #eeede7;
+    }
+    .preview:fullscreen [data-video-stage] {
+      width: min(1280px, calc(100vw - 32px), calc((100vh - 130px) * 16 / 9));
+      flex: 0 1 auto;
+    }
+    .preview:fullscreen [data-video-controls],
+    .preview:fullscreen .source-note { flex: 0 0 auto; }
+    svg { display: block; width: 100%; height: 100%; }
+    [data-video-controls] {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: min(1280px, calc(100vw - 32px));
+      margin: 12px auto 0;
+      color: #4d5b5e;
+      font: 12px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    button {
+      min-width: 86px;
+      padding: 9px 13px;
+      border: 1px solid #c7c9be;
+      border-radius: 7px;
+      background: #fffefa;
+      color: #263941;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:hover { border-color: #2875b6; color: #1f6198; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #347eb6; outline-offset: 3px; }
+    output { min-width: 116px; text-align: center; font-variant-numeric: tabular-nums; }
+    input[type="range"] { flex: 1; min-width: 60px; accent-color: #367db3; cursor: pointer; }
+    .hint { color: #77817e; white-space: nowrap; }
+    .source-note {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 10px auto 0;
+      color: #747d79;
+      font-size: 11px;
+      text-align: right;
+    }
+    .source-note a { color: #466c82; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+    @media (max-width: 640px) {
+      .preview { padding: 14px 10px; }
+      [data-video-stage], [data-video-controls], .source-note { width: calc(100vw - 20px); }
+      [data-video-controls] { gap: 6px; flex-wrap: wrap; }
+      button { min-width: 78px; padding-inline: 9px; }
+      .hint { display: none; }
+      output { min-width: 102px; }
+      .source-note { text-align: left; line-height: 1.5; }
+    }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <section data-video-stage data-width="1280" data-height="720" aria-label="两列相向传播的波包相遇、叠加并继续通过的示意动画">
+      <svg id="artboard" viewBox="0 0 1280 720" role="img" aria-labelledby="scene-title scene-description" xmlns="http://www.w3.org/2000/svg">
+        <title id="scene-title">两列波相遇时，位移怎样叠加？</title>
+        <desc id="scene-description">蓝色波包向右，珊瑚色波包向左。先展示同相波包相遇时位移增强，再重新开始一组反相波包，展示位移抵消；固定位置的读数由逐点相加得出，波包随后继续通过。</desc>
+        <defs>
+          <pattern id="paper-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <path d="M28 0H0V28" fill="none" stroke="#7d8b82" stroke-opacity=".065" stroke-width="1"/>
+          </pattern>
+          <pattern id="paper-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r=".8" fill="#718078" fill-opacity=".09"/>
+          </pattern>
+          <marker id="arrow-blue" markerWidth="7" markerHeight="7" refX="5.8" refY="3.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M0 0L7 3.5L0 7Z" fill="#347fb7"/>
+          </marker>
+          <marker id="arrow-coral" markerWidth="7" markerHeight="7" refX="5.8" refY="3.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M0 0L7 3.5L0 7Z" fill="#e17c66"/>
+          </marker>
+          <marker id="arrow-ink" markerWidth="7" markerHeight="7" refX="5.8" refY="3.5" orient="auto" markerUnits="strokeWidth">
+            <path d="M0 0L7 3.5L0 7Z" fill="#263940"/>
+          </marker>
+        </defs>
+        <rect width="1280" height="720" fill="#fbfaf5"/>
+        <rect width="1280" height="720" fill="url(#paper-grid)"/>
+        <rect width="1280" height="720" fill="url(#paper-dots)"/>
+
+        <path d="M72 67H1208" fill="none" stroke="#d9d7ca" stroke-width="1"/>
+        <circle cx="78" cy="39" r="4.5" fill="#347fb7"/>
+        <text x="91" y="43" fill="#566a6c" font-size="10" font-weight="700" letter-spacing="1.8">波动笔记  /  线性叠加</text>
+        <text x="1205" y="43" text-anchor="end" fill="#7c8580" font-size="9" letter-spacing="1.1">示意动画 · 20 秒 · 静音</text>
+
+        <text x="76" y="112" fill="#24353c" font-size="36" font-weight="650" letter-spacing="-.7">两列波相遇时，位移怎样叠加？</text>
+        <text x="78" y="141" fill="#687673" font-size="15">看同一位置：两列波各自的位移，按正负方向相加。</text>
+        <g>
+          <rect x="848" y="78" width="360" height="75" rx="9" fill="#fffefa" stroke="#e0ded3"/>
+          <text x="870" y="101" fill="#78837c" font-size="9" font-weight="700" letter-spacing="1.1">一维理想线性波包</text>
+          <text x="870" y="132" fill="#253b42" font-size="20" font-family="Georgia, 'Times New Roman', serif">y(x,t) = f(x−vt) + g(x+vt)</text>
+        </g>
+
+        <g id="case-heading">
+          <rect id="case-pill" x="74" y="158" width="199" height="28" rx="14" fill="#e9f1f5"/>
+          <circle id="case-dot" cx="91" cy="172" r="4" fill="#347fb7"/>
+          <text id="case-title" x="103" y="176" fill="#315c77" font-size="13" font-weight="700" letter-spacing=".15">情形一 · 同相</text>
+          <text id="case-note" x="292" y="176" fill="#6c7976" font-size="13">同号位移相遇，合位移增强</text>
+          <text x="930" y="176" text-anchor="end" fill="#65726f" font-size="12">固定采样点 P · x = 5</text>
+        </g>
+
+        <g id="wave-field">
+          <g id="lane-bands">
+            <rect x="104" y="241" width="824" height="78" rx="6" fill="#f1f5f5" fill-opacity=".77"/>
+            <rect x="104" y="354" width="824" height="78" rx="6" fill="#f7f2ed" fill-opacity=".74"/>
+            <rect x="104" y="447" width="824" height="163" rx="6" fill="#eff1ed" fill-opacity=".76"/>
+          </g>
+          <g id="position-grid" stroke="#a8b0a8" stroke-width="1" stroke-opacity=".22">
+            <path d="M112 236V610M192 236V610M272 236V610M352 236V610M432 236V610M512 236V610M592 236V610M672 236V610M752 236V610M832 236V610M912 236V610"/>
+          </g>
+          <g stroke="#9ba8a2" stroke-width="1.1" stroke-opacity=".7">
+            <path d="M112 280H912M112 393H912M112 528H912"/>
+          </g>
+          <g fill="#66746f" font-size="8.5" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">
+            <text x="112" y="629" text-anchor="middle">0</text>
+            <text x="272" y="629" text-anchor="middle">2</text>
+            <text x="432" y="629" text-anchor="middle">4</text>
+            <text x="592" y="629" text-anchor="middle">6</text>
+            <text x="752" y="629" text-anchor="middle">8</text>
+            <text x="912" y="629" text-anchor="middle">10</text>
+          </g>
+          <text x="511" y="646" text-anchor="middle" fill="#79847e" font-size="9" letter-spacing=".9">位置 x（统一横轴）</text>
+
+          <g id="lane-labels">
+            <text x="118" y="236" fill="#3476a8" font-size="14" font-weight="700">蓝 · y₁（单独位移参考）</text>
+            <path d="M793 232H906" stroke="#347fb7" stroke-width="1.7" marker-end="url(#arrow-blue)"/>
+            <text x="783" y="236" text-anchor="end" fill="#3476a8" font-size="12">向右传播</text>
+            <text x="118" y="349" fill="#b96653" font-size="14" font-weight="700">珊瑚 · y₂（单独位移参考）</text>
+            <path d="M906 346H793" stroke="#e17c66" stroke-width="1.7" marker-end="url(#arrow-coral)"/>
+            <text x="783" y="349" text-anchor="end" fill="#b96653" font-size="12">向左传播</text>
+            <text x="118" y="443" fill="#2b3d42" font-size="14" font-weight="700">深墨 · 实际合位移 y = y₁ + y₂</text>
+            <text x="912" y="443" text-anchor="end" fill="#7d8780" font-size="10.5">三行分开绘制 · 只有一条实际位移</text>
+          </g>
+
+          <path id="probe-line" d="M512 239V600" fill="none" stroke="#596b6b" stroke-width="1.2" stroke-dasharray="3 5" opacity=".55"/>
+          <circle cx="512" cy="229" r="9" fill="#fffefa" stroke="#677876" stroke-width="1.2"/>
+          <text x="512" y="232" text-anchor="middle" fill="#536765" font-size="8" font-weight="700">P</text>
+          <path id="wave-one" d="" fill="none" stroke="#347fb7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path id="wave-two" d="" fill="none" stroke="#e17c66" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path id="wave-sum" d="" fill="none" stroke="#263940" stroke-width="3.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle id="probe-one" cx="512" cy="280" r="5.1" fill="#347fb7" stroke="#fffefa" stroke-width="1.8"/>
+          <circle id="probe-two" cx="512" cy="393" r="5.1" fill="#e17c66" stroke="#fffefa" stroke-width="1.8"/>
+          <circle id="probe-sum" cx="512" cy="528" r="6.2" fill="#263940" stroke="#fffefa" stroke-width="2"/>
+        </g>
+
+        <g id="probe-card">
+          <rect x="954" y="207" width="254" height="396" rx="10" fill="#fffefa" stroke="#dcded4"/>
+          <text x="974" y="235" fill="#586c6d" font-size="16" font-weight="700">定点观察 P</text>
+          <text x="1188" y="235" text-anchor="end" fill="#7c8781" font-size="12">x = 5 · 固定</text>
+          <text x="974" y="269" fill="#253c43" font-size="18" font-family="Georgia, 'Times New Roman', serif">y(P,t) = y₁ + y₂</text>
+          <path d="M974 282H1188" stroke="#e2e3da"/>
+
+          <text x="976" y="309" fill="#527b96" font-size="13" font-weight="700">第一列 · y₁</text>
+          <text id="value-one" x="1187" y="309" text-anchor="end" fill="#3476a8" font-size="18" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">+0.00</text>
+          <path d="M1037 323H1168" stroke="#d9e0df" stroke-width="4" stroke-linecap="round"/>
+          <path d="M1102 317V329" stroke="#778780" stroke-width="1"/>
+          <rect id="bar-one" x="1102" y="320.5" width="0" height="5" rx="2.5" fill="#347fb7"/>
+
+          <text x="976" y="355" fill="#b36858" font-size="13" font-weight="700">第二列 · y₂</text>
+          <text id="value-two" x="1187" y="355" text-anchor="end" fill="#b96653" font-size="18" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">+0.00</text>
+          <path d="M1037 369H1168" stroke="#e3ded8" stroke-width="4" stroke-linecap="round"/>
+          <path d="M1102 363V375" stroke="#92847c" stroke-width="1"/>
+          <rect id="bar-two" x="1102" y="366.5" width="0" height="5" rx="2.5" fill="#e17c66"/>
+
+          <text x="976" y="401" fill="#34484b" font-size="13" font-weight="700">实际合位移 · y</text>
+          <text id="value-sum" x="1187" y="401" text-anchor="end" fill="#263940" font-size="18" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">+0.00</text>
+          <path d="M1037 415H1168" stroke="#d8ddda" stroke-width="4" stroke-linecap="round"/>
+          <path d="M1102 409V421" stroke="#64716d" stroke-width="1"/>
+          <rect id="bar-sum" x="1102" y="412.5" width="0" height="5" rx="2.5" fill="#263940"/>
+
+          <rect id="result-tag" x="974" y="438" width="214" height="31" rx="15.5" fill="#e9f2ec"/>
+          <circle id="result-dot" cx="991" cy="453.5" r="4.5" fill="#5c9871"/>
+          <text id="result-label" x="1005" y="458" fill="#47755a" font-size="13" font-weight="700" letter-spacing=".1">同向位移 · 增强</text>
+          <text id="readout-note" x="974" y="497" fill="#61716c" font-size="12">两项同号，合位移幅度增加。</text>
+          <path d="M974 516H1188" stroke="#e2e3da"/>
+          <text x="974" y="539" fill="#6a7975" font-size="10.5">颜色区分各波单独的位移参考；</text>
+          <text x="974" y="559" fill="#6a7975" font-size="10.5">深墨线是唯一的实际合位移。</text>
+          <text x="974" y="583" fill="#839089" font-size="9.5">位移方向由数值正负表示。</text>
+        </g>
+
+        <g id="transition-card" opacity="0">
+          <rect x="249" y="320" width="569" height="157" rx="13" fill="#fffefa" stroke="#d8d8ce" stroke-width="1.2"/>
+          <path d="M275 350H791" stroke="#e5e3d8"/>
+          <text x="277" y="343" fill="#78817c" font-size="9" font-weight="700" letter-spacing="1.1">情形二 · 重新开始一轮</text>
+          <text x="277" y="382" fill="#26383e" font-size="23" font-weight="650">换成一组反相波包</text>
+          <text x="277" y="407" fill="#687571" font-size="10">位置与传播方向重新设定；这一轮不接续上一轮。</text>
+          <path d="M285 441H410" stroke="#347fb7" stroke-width="2.2" marker-end="url(#arrow-blue)"/>
+          <circle cx="328" cy="441" r="5" fill="#347fb7"/>
+          <text x="419" y="445" fill="#45606a" font-size="10">y₁ = +A</text>
+          <path d="M605 441H480" stroke="#e17c66" stroke-width="2.2" marker-end="url(#arrow-coral)"/>
+          <circle cx="563" cy="441" r="5" fill="#fffefa" stroke="#e17c66" stroke-width="2"/>
+          <text x="617" y="445" fill="#956154" font-size="10">y₂ = −A</text>
+          <text x="782" y="445" text-anchor="end" fill="#75817b" font-size="9">反号相位</text>
+        </g>
+
+        <g id="summary-card" opacity="0">
+          <rect x="954" y="207" width="254" height="396" rx="10" fill="#fffefa" stroke="#dcded4"/>
+          <text x="974" y="235" fill="#586c6d" font-size="16" font-weight="700">两种相位 · 同一规则</text>
+          <text x="974" y="258" fill="#7a8580" font-size="8.5">在重合中心，比较两列波的位移。</text>
+          <path d="M974 273H1188" stroke="#e2e3da"/>
+
+          <circle cx="986" cy="301" r="5" fill="#347fb7"/>
+          <circle cx="1000" cy="301" r="5" fill="#e17c66"/>
+          <text x="1015" y="305" fill="#34494e" font-size="14" font-weight="700">同相 · 同号增强</text>
+          <text x="986" y="340" fill="#263940" font-size="20" font-family="Georgia, 'Times New Roman', serif">(+A) + (+A) = +2A</text>
+          <path d="M974 354H1188" stroke="#e2e3da"/>
+
+          <circle cx="986" cy="381" r="5" fill="#347fb7"/>
+          <circle cx="1000" cy="381" r="5" fill="#fffefa" stroke="#e17c66" stroke-width="2"/>
+          <text x="1015" y="385" fill="#34494e" font-size="14" font-weight="700">反相 · 反号抵消</text>
+          <text x="986" y="420" fill="#263940" font-size="20" font-family="Georgia, 'Times New Roman', serif">(+A) + (−A) = 0</text>
+          <path d="M974 436H1188" stroke="#e2e3da"/>
+
+          <rect x="974" y="455" width="214" height="61" rx="8" fill="#eef1ed"/>
+          <path d="M991 474H1013" stroke="#347fb7" stroke-width="2" marker-end="url(#arrow-blue)"/>
+          <path d="M1013 489H991" stroke="#e17c66" stroke-width="2" marker-end="url(#arrow-coral)"/>
+          <text x="1025" y="479" fill="#32464b" font-size="14" font-weight="700">位移逐点相加</text>
+          <text x="1025" y="498" fill="#6a7975" font-size="12">相消不等于能量消失</text>
+          <text x="974" y="548" fill="#263940" font-size="14" font-weight="700">波包相遇后仍继续传播。</text>
+          <text x="974" y="570" fill="#7b8580" font-size="8.5">理想线性介质中的示意波形</text>
+          <text x="974" y="587" fill="#7b8580" font-size="8.5">深墨线始终由 y₁ + y₂ 计算。</text>
+        </g>
+
+        <path d="M72 665H1208" stroke="#d9d7ca"/>
+        <text id="footer-main" x="76" y="687" fill="#667570" font-size="10" font-weight="650">理想线性介质示意 · 位移相消不表示波或能量消失</text>
+        <text x="1207" y="687" text-anchor="end" fill="#7d8780" font-size="9" font-family="ui-monospace, SFMono-Regular, Consolas, monospace">解析波包  /  f(x−vt) + g(x+vt)</text>
+      </svg>
+    </section>
+    <div data-video-controls aria-label="动画控制">
+      <button type="button" data-play aria-label="播放动画">播放</button>
+      <button type="button" data-restart aria-label="从头播放动画">从头播放</button>
+      <button type="button" data-fullscreen aria-label="全屏观看">全屏</button>
+      <output data-readout for="timeline">00:00.0 / 00:20.0</output>
+      <input id="timeline" type="range" min="0" max="20000" step="1" value="0" aria-label="拖动查看动画时间">
+      <span class="hint">拖动时间轴；全屏后按 Esc 退出</span>
+    </div>
+    <p class="source-note">叠加原理参考：<a href="https://openstax.org/books/university-physics-volume-1/pages/16-5-interference-of-waves" target="_blank" rel="noreferrer">OpenStax《University Physics》16.5</a>。画面使用解析合成波包作示意。</p>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+      const WIDTH = 1280;
+      const HEIGHT = 720;
+      const DURATION = 20;
+      const FPS = 30;
+      const X0 = 112;
+      const X1 = 912;
+      const Y_BASE = { one: 280, two: 393, sum: 528 };
+      const SCALE = 100;
+      const AMPLITUDE = .38;
+      const SIGMA = .78;
+      const WAVELENGTH = 1.5;
+      const PROBE_X = 5;
+
+      // Storyboard: 0–3s introduce the two reference displacements and fixed probe;
+      // 3–9.7s run a same-phase passage with a 0.7s marked reading freeze at t=6;
+      // 9.45–10.25s visibly reset the initial conditions; 10.2–17.5s run an
+      // opposite-phase passage with a second marked 0.7s reading freeze at t=13.5;
+      // 17.5–20s hold a two-case recap. During either freeze, animation time advances
+      // while the model's propagation time is held; the on-screen label states this.
+      // Each wave is a translated analytic packet;
+      // the dark path is computed sample by sample as the two signed values add.
+      // Physics basis: https://openstax.org/books/university-physics-volume-1/pages/16-5-interference-of-waves
+      const SCENES = [
+        { at: 0, name: "建立两列参考位移" }, { at: 3, name: "同相相向传播" },
+        { at: 6, name: "同相定格观察" }, { at: 9.45, name: "显式重设初态" },
+        { at: 10.2, name: "反相相向传播" }, { at: 13.5, name: "反相定格观察" },
+        { at: 17.5, name: "两种结果回顾" },
+      ];
+      const clamp = (value, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, value));
+      const smooth = (value) => { const x = clamp(value); return x * x * (3 - 2 * x); };
+      const el = (id) => document.getElementById(id);
+      const p1Path = el("wave-one");
+      const p2Path = el("wave-two");
+      const sumPath = el("wave-sum");
+      const playButton = document.querySelector("[data-play]");
+      const restartButton = document.querySelector("[data-restart]");
+      const fullscreenButton = document.querySelector("[data-fullscreen]");
+      const slider = document.querySelector("#timeline");
+      const readout = document.querySelector("[data-readout]");
+      let currentTime = 0;
+      let isPlaying = false;
+      let frameId = 0;
+      let playOrigin = 0;
+
+      const mapX = (position) => X0 + (X1 - X0) * position / 10;
+      const packet = (position, center, sign) => {
+        const dx = position - center;
+        const envelope = Math.exp(-.5 * (dx / SIGMA) ** 2);
+        const carrier = Math.cos(2 * Math.PI * dx / WAVELENGTH);
+        return sign * AMPLITUDE * envelope * carrier;
+      };
+      const formatValue = (value) => {
+        const safe = Math.abs(value) < .005 ? 0 : value;
+        return (safe >= 0 ? "+" : "−") + Math.abs(safe).toFixed(2);
+      };
+      const formatTime = (seconds) => {
+        const whole = Math.floor(seconds);
+        return "00:" + String(whole).padStart(2, "0") + "." + Math.floor((seconds - whole) * 10);
+      };
+      const pointValue = (position, center, sign) => packet(position, center, sign);
+      const pathFor = (which, centerOne, centerTwo, signTwo) => {
+        const samples = 400;
+        let path = "";
+        for (let i = 0; i <= samples; i += 1) {
+          const position = 10 * i / samples;
+          const first = packet(position, centerOne, 1);
+          const second = packet(position, centerTwo, signTwo);
+          const value = which === "one" ? first : which === "two" ? second : first + second;
+          const base = Y_BASE[which];
+          const x = X0 + (X1 - X0) * i / samples;
+          const y = base - SCALE * value;
+          path += (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+        }
+        return path.trim();
+      };
+      const drawBar = (id, value) => {
+        const bar = el(id);
+        const center = 1102;
+        const width = Math.min(61, Math.abs(value) / .76 * 61);
+        bar.setAttribute("x", String(value < 0 ? center - width : center));
+        bar.setAttribute("width", String(width));
+      };
+      const setOpacity = (id, value) => el(id).setAttribute("opacity", String(clamp(value)));
+      const updateControls = () => {
+        const ended = currentTime >= DURATION;
+        playButton.textContent = isPlaying ? "暂停" : ended ? "再看一次" : "播放";
+        playButton.setAttribute("aria-label", isPlaying ? "暂停动画" : ended ? "从头再看一次" : "播放动画");
+        slider.value = String(Math.round(currentTime * 1000));
+        readout.textContent = formatTime(currentTime) + " / " + formatTime(DURATION);
+      };
+
+      function drawFrame(seconds) {
+        const t = clamp(seconds, 0, DURATION);
+        currentTime = t;
+        let centerOne;
+        let centerTwo;
+        let signTwo;
+        let freeze = "";
+        let firstElapsed;
+        if (t < 6) firstElapsed = clamp(t - 3, 0, 3);
+        else if (t < 6.7) { firstElapsed = 3; freeze = "same"; }
+        else firstElapsed = clamp(3 + t - 6.7, 0, 6);
+        const firstCase = t < 9.65;
+        if (firstCase) {
+          centerOne = 3 + (2 / 3) * firstElapsed;
+          centerTwo = 7 - (2 / 3) * firstElapsed;
+          signTwo = 1;
+        } else {
+          let secondElapsed;
+          if (t < 13.5) secondElapsed = clamp(t - 10.2, 0, 3.3);
+          else if (t < 14.2) { secondElapsed = 3.3; freeze = "opposite"; }
+          else secondElapsed = clamp(3.3 + t - 14.2, 0, 6.6);
+          const speed = 2.7 / 3.3;
+          centerOne = 2.8 + speed * secondElapsed;
+          centerTwo = 8.2 - speed * secondElapsed;
+          signTwo = -1;
+        }
+
+        const oldField = 1 - smooth((t - 9.42) / .24);
+        const newField = smooth((t - 9.92) / .32);
+        const fieldOpacity = t < 9.65 ? oldField : newField;
+        setOpacity("wave-field", fieldOpacity);
+        const transitionOpacity = smooth((t - 9.4) / .18) * (1 - smooth((t - 10.25) / .18));
+        setOpacity("transition-card", transitionOpacity);
+
+        const isFirstCase = t < 9.65;
+        const bothPassed = centerOne > PROBE_X + SIGMA && centerTwo < PROBE_X - SIGMA;
+        el("case-pill").setAttribute("fill", isFirstCase ? "#e9f1f5" : "#f8ece7");
+        el("case-dot").setAttribute("fill", isFirstCase ? "#347fb7" : "#e17c66");
+        el("case-title").setAttribute("fill", isFirstCase ? "#315c77" : "#a35f4e");
+        el("case-title").textContent = freeze === "same" ? "定格观察 · 同相" : freeze === "opposite" ? "定格观察 · 反相" : isFirstCase ? "情形一 · 同相" : "情形二 · 反相";
+        el("case-note").textContent = freeze === "same"
+          ? "传播示意暂停 0.7 秒 · 同号波峰重合"
+          : freeze === "opposite"
+            ? "传播示意暂停 0.7 秒 · 整列波包重合"
+            : t >= 9.42 && t <= 10.25
+              ? "换一组初态 · 重新开始第二轮"
+              : bothPassed ? "两列波包已通过 P · 仍继续传播"
+              : isFirstCase ? "相同波包完全重合时增强" : "反相波包完全重合时抵消";
+        el("footer-main").textContent = freeze
+          ? "定格观察 · 传播示意暂停 0.7 秒；动画时间继续"
+          : t < 17.5
+            ? "理想线性介质示意 · 位移相消不表示波或能量消失"
+            : "位移逐点相加；波包相遇后仍继续传播。";
+
+        p1Path.setAttribute("d", pathFor("one", centerOne, centerTwo, signTwo));
+        p2Path.setAttribute("d", pathFor("two", centerOne, centerTwo, signTwo));
+        sumPath.setAttribute("d", pathFor("sum", centerOne, centerTwo, signTwo));
+
+        const v1 = pointValue(PROBE_X, centerOne, 1);
+        const v2 = pointValue(PROBE_X, centerTwo, signTwo);
+        const total = v1 + v2;
+        el("probe-one").setAttribute("cy", String(Y_BASE.one - SCALE * v1));
+        el("probe-two").setAttribute("cy", String(Y_BASE.two - SCALE * v2));
+        el("probe-sum").setAttribute("cy", String(Y_BASE.sum - SCALE * total));
+        el("value-one").textContent = formatValue(v1);
+        el("value-two").textContent = formatValue(v2);
+        el("value-sum").textContent = formatValue(total);
+        drawBar("bar-one", v1);
+        drawBar("bar-two", v2);
+        drawBar("bar-sum", total);
+
+        const sameDirection = v1 * v2 >= 0;
+        const meaningful = Math.abs(v1) + Math.abs(v2) > .055;
+        const wholePacketOverlap = signTwo < 0 && Math.abs(centerOne - centerTwo) < 1e-9;
+        const tag = el("result-tag");
+        const label = el("result-label");
+        const dot = el("result-dot");
+        const bothApproaching = centerOne < PROBE_X - SIGMA && centerTwo > PROBE_X + SIGMA;
+        tag.setAttribute("fill", wholePacketOverlap ? "#e9f2ec" : !meaningful ? "#eef0ec" : sameDirection ? "#e9f2ec" : "#f8eee9");
+        label.setAttribute("fill", wholePacketOverlap ? "#47755a" : !meaningful ? "#727e78" : sameDirection ? "#47755a" : "#a45f4c");
+        dot.setAttribute("fill", wholePacketOverlap ? "#5c9871" : !meaningful ? "#929b94" : sameDirection ? "#5c9871" : "#d47c62");
+        label.textContent = wholePacketOverlap
+          ? "完全抵消 · 波包重合"
+          : !meaningful
+            ? bothPassed ? "已通过 P · 继续传播" : "P 点位移很小"
+            : sameDirection ? "P 点同向 · 合位移增强" : "P 点异号 · 部分抵消";
+        el("readout-note").textContent = wholePacketOverlap
+          ? "逐点等幅反号，合位移为零。"
+          : bothPassed
+            ? "已通过 P，仍继续传播。"
+            : bothApproaching
+              ? "两列波正向 P 传播。"
+              : sameDirection
+                ? "两项同号，合位移增强。"
+                : "两项异号，位移代数相加。";
+
+        const ending = smooth((t - 17.35) / .35);
+        setOpacity("probe-card", (1 - ending) * fieldOpacity);
+        setOpacity("summary-card", ending);
+        updateControls();
+      }
+
+      function pause() {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = 0;
+        isPlaying = false;
+        updateControls();
+      }
+      function paint(seconds) {
+        drawFrame(seconds);
+      }
+      function advance(timestamp) {
+        if (!isPlaying) return;
+        const next = (timestamp - playOrigin) / 1000;
+        if (next >= DURATION) {
+          paint(DURATION);
+          pause();
+          return;
+        }
+        paint(next);
+        frameId = requestAnimationFrame(advance);
+      }
+      const ready = (document.fonts ? document.fonts.ready : Promise.resolve()).then(() =>
+        new Promise((resolve) => requestAnimationFrame(() => resolve()))
+      ).then(() => {
+        drawFrame(0);
+      });
+      const video = {
+        width: WIDTH,
+        height: HEIGHT,
+        duration: DURATION,
+        fps: FPS,
+        ready,
+        async seek(seconds) {
+          await ready;
+          const value = Number(seconds);
+          if (!Number.isFinite(value)) throw new TypeError("seek(seconds) requires a finite number");
+          pause();
+          paint(value);
+          await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+        },
+        play() {
+          if (isPlaying) return;
+          if (currentTime >= DURATION) paint(0);
+          isPlaying = true;
+          playOrigin = performance.now() - currentTime * 1000;
+          frameId = requestAnimationFrame(advance);
+          updateControls();
+        },
+        pause,
+      };
+      Object.defineProperties(video, {
+        time: { enumerable: true, get: () => currentTime },
+        playing: { enumerable: true, get: () => isPlaying },
+      });
+      window.__video = video;
+      playButton.addEventListener("click", () => isPlaying ? video.pause() : video.play());
+      restartButton.addEventListener("click", async () => { await video.seek(0); video.play(); });
+      fullscreenButton.addEventListener("click", async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else if (document.querySelector(".preview").requestFullscreen) await document.querySelector(".preview").requestFullscreen();
+        } catch (error) {
+          fullscreenButton.textContent = "无法全屏";
+          window.setTimeout(() => { fullscreenButton.textContent = document.fullscreenElement ? "退出全屏" : "全屏"; }, 1500);
+        }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        const active = Boolean(document.fullscreenElement);
+        fullscreenButton.textContent = active ? "退出全屏" : "全屏";
+        fullscreenButton.setAttribute("aria-label", active ? "退出全屏观看" : "全屏观看");
+      });
+      slider.addEventListener("input", () => { void video.seek(Number(slider.value) / 1000); });
+      if (new URLSearchParams(location.search).get("autoplay") !== "0") ready.then(() => video.play());
+    })();
+  </script>
+</body>
+</html>
